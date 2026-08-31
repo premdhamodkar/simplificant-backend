@@ -1,5 +1,3 @@
-// server.js
-
 require('dotenv').config();
 
 const express = require('express');
@@ -11,7 +9,24 @@ const pool = require('./db');
 // -------------------------
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://simplificant-frontend.vercel.app', // <-- CORRECTED DOMAIN
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    const isAllowed =
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      /^https:\/\/simplificant-frontend-[a-z0-9-]+\.vercel\.app$/.test(origin); // <-- CORRECTED REGEX
+    callback(isAllowed ? null : new Error('CORS blocked'), isAllowed);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
+
 app.use(express.json({ limit: '25mb' }));
 
 // -------------------------
@@ -45,7 +60,6 @@ app.use('/api/artisans', artisanRoutes);
 
 const productRoutes = require('./routes/products');
 app.use('/api/products', productRoutes);
-
 
 const orderRoutes = require('./routes/orders');
 app.use('/api/orders', orderRoutes);
